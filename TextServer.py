@@ -14,7 +14,8 @@ def hello_monkey():
 
 @app.route("/stocks", methods=['POST'])
 def stockResponse():
-    """Returns a stock quote given a stock"
+    """Returns a stock quote given a stock"""
+    pass
 
 
 
