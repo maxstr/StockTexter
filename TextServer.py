@@ -9,7 +9,15 @@ def hello_monkey():
 
     resp = twilio.twiml.Response()
     resp.message("Hello, Mobile Monkey")
+    print request
     return str(resp)
 
+@app.route("/stocks", methods=['POST'])
+def stockResponse():
+    """Returns a stock quote given a stock"
+
+
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, run='0.0.0.0')
