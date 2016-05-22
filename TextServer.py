@@ -10,18 +10,22 @@ def stockResponse():
 
     # Handle and parse incoming data
     incomingText = request.form['Body']
-    stockList = incomingText.split()
+    stockList = map(lambda stock: stock.upper(), incomingText.split())
 
     # Get the stock info we want.
-    stockInfo = stockInfoFromTickers(stockList, sg.FINANCE_PARAMS_BASIC)
+    stockInfo = sg.stockInfoFromTickers(stockList, sg.FINANCE_PARAMS_BASIC)
 
 
     #Return a response
     returnLines = ""
     for stock in stockList:
-        returnLines += "%s \n" % stockInfo[stock]['Name']
-        for param in filter(lambda key: key != 'Name', sg.FINANCE_PARAMS_BASIC.values())
-            returnLines += "%s : %s" % (param, stockInfo[stock][param])
+	if stockInfo[stock]['Name'] != 'N/A':
+		returnLines += "%s - %s \n" % (stockInfo[stock]['Name'], stock)
+		paramsNoName = filter(lambda key: key != 'Name', sg.FINANCE_PARAMS_BASIC.values())
+		for param in paramsNoName:
+		    returnLines += "%s : %s\n" % (param, stockInfo[stock][param])
+	else:
+		returnLines += "%s - Ticker could not be found" % stock
         returnLines += "\n"
 
 
