@@ -1,4 +1,5 @@
 from flask import Flask, request, redirect
+import StockGrabber as sg
 import twilio.twiml
 
 app = Flask(__name__)
@@ -11,14 +12,23 @@ def stockResponse():
     incomingText = request.form['Body']
     stockList = incomingText.split()
 
+    # Get the stock info we want.
+    stockInfo = stockInfoFromTickers(stockList, sg.FINANCE_PARAMS_BASIC)
+
 
     #Return a response
-    returnLines = "\n"
+    returnLines = ""
     for stock in stockList:
-        returnLines += "%s : %.2f\n" % (stock, 100.20)
+        returnLines += "%s \n" % stockInfo[stock]['Name']
+        for param in filter(lambda key: key != 'Name', sg.FINANCE_PARAMS_BASIC.values())
+            returnLines += "%s : %s" % (param, stockInfo[stock][param])
+        returnLines += "\n"
+
+
+
     resp = twilio.twiml.Response()
     resp.message(returnLines)
-    
+
     return str(resp)
 
 if __name__ == "__main__":
