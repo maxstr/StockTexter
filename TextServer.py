@@ -12,7 +12,7 @@ TextServer = Flask(__name__)
 # the stocks listed in the lastRequested cookie and some additional info
 # about them
 def moreInfo(request):
-    twimlResponse = twilio.twiml.twimlresponse()
+    twimlResponse = twilio.twiml.Response()
 
     moreFooter = "Respond with SUBSCRIBE to subscribe to a daily update for these stocks"
 
@@ -45,7 +45,7 @@ def moreInfo(request):
 # Given a request with just tickers, we return some basic information about those stocks
 def basicInfo(request):
 
-    twimlResponse = twilio.twiml.response()
+    twimlResponse = twilio.twiml.Response()
 
     basicFooter = "Respond with MORE or SUBSCRIBE to get more info or to subscribe to daily alerts"
 
@@ -72,7 +72,7 @@ def basicInfo(request):
 # Given a request for all information about a stock, returns a string with information about each ticker requested
 def allInfo(resp):
 
-    twimlResponse = twilio.twiml.response()
+    twimlResponse = twilio.twiml.Response()
 
     allFooter = "Respond with SUBSCRIBE to subscribe to a daily update for these stocks"
 
@@ -127,7 +127,7 @@ def addToSchedule(request):
     return flaskResponse
 
 def removeFromSchedule(request):
-    twimlResponse = twilio.twiml.response()
+    twimlResponse = twilio.twiml.Response()
 
 
     flaskResponse = make_response(twimlResponse)
