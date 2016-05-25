@@ -35,7 +35,7 @@ def moreInfo(request):
     twimlResponse.message(stockInfo)
     twimlResponse.message(moreFooter)
 
-    flaskResponse = make_response(twimlResponse)
+    flaskResponse = make_response(twimlResponse, 200)
 
     flaskResponse.set_cookie('lastRequested', json.dumps(filter(lambda key: stockInfo[key]['Name'] != 'N/A', stockInfo)))
 
@@ -63,7 +63,7 @@ def basicInfo(request):
     twimlResponse.message(stockInfo)
     twimlResponse.message(basicFooter)
 
-    flaskResponse = make_response(twimlResponse)
+    flaskResponse = make_response(twimlResponse, 200)
     # Drop all stocks that returned N/A, put the rest in a cookie
     flaskResponse.set_cookie('lastRequested', json.dumps(filter(lambda key: stockInfo[key]['Name'] != 'N/A', stockInfo)))
 
@@ -90,7 +90,7 @@ def allInfo(resp):
     twimlResponse.message(stockInfo)
     twimlResponse.message(allFooter)
 
-    flaskResponse = make_response(twimlResponse)
+    flaskResponse = make_response(twimlResponse, 200)
 
     flaskResponse.set_cookie('lastRequested', json.dumps(filter(lambda key: stockInfo[key]['Name'] != 'N/A', stockInfo)))
 
@@ -122,7 +122,7 @@ def addToSchedule(request):
         twimlResponse.message("No valid stocks found to subscribe for.")
 
 
-    flaskResponse = make_response(twimlResponse)
+    flaskResponse = make_response(twimlResponse, 200)
 
     return flaskResponse
 
@@ -130,7 +130,7 @@ def removeFromSchedule(request):
     twimlResponse = twilio.twiml.Response()
 
 
-    flaskResponse = make_response(twimlResponse)
+    flaskResponse = make_response(twimlResponse, 200)
 
     return flaskResponse
 
