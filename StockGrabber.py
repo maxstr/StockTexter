@@ -7,7 +7,7 @@ import csv
 # Info from http://www.jarloo.com/yahoo_finance/
 FINANCE_API_URL = "http://finance.yahoo.com/d/quotes.csv?"
 FINANCE_PARAMS_BASIC = { 'a': 'Ask', 'b' : 'Bid', 'c' : 'Change', 'n' : 'Name' }
-FINANCE_PARAMS_EXTRA = { 'g' : 'Day Low', 'h': 'Day High', 'v': 'Volume', 't7': 'Ticker Trend' }
+FINANCE_PARAMS_EXTRA = { 'g' : 'Day Low', 'h': 'Day High', 'v': 'Volume', 't7': 'Ticker Trend', 'n' : 'Name' }
 FINANCE_PARAMS_ALL = FINANCE_PARAMS_BASIC.copy()
 FINANCE_PARAMS_ALL.update(FINANCE_PARAMS_EXTRA)
 
