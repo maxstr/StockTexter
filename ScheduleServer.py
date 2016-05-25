@@ -13,7 +13,7 @@ class ScheduleServer:
 
     def __init__(self, sqlite = None, twilioSID = TWILIO_ACCOUNT_SID, twilioToken = TWILIO_AUTH_TOKEN, outgoingNumber = SENDING_NUMBER):
         self.scheduler = BackgroundScheduler()
-        self.scheduler.add_jobstore('sqlalchemy', url=(sqlite if sqlite else 'schedule.sqlite'))
+        self.scheduler.add_jobstore('sqlalchemy', url=(sqlite if sqlite else 'sqlite:///schedule.sqlite'))
         self.restClient = TwilioRestClient(twilioSID, twilioToken)
         self.fromNumber = outgoingNumber
         pub.subscribe(self.addToSchedule, 'addToSchedule')

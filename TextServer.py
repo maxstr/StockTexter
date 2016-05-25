@@ -130,7 +130,7 @@ def stockResponse():
 
     if firstWord in COMMANDS:
         response = COMMANDS[firstWord](request)
-    else
+    else:
         response = COMMANDS['default'](request)
 
 
