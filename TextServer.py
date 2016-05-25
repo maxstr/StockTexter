@@ -20,7 +20,8 @@ def moreInfo(request):
 
     if not lastRequestedStocks:
         twimlResponse.message("You must lookup stocks before requesting more information on them")
-        return twimlResponse
+        flaskResponse = make_response(twimlResponse, 200)
+        return flaskResponse
 
     stockList = []
 
@@ -28,7 +29,8 @@ def moreInfo(request):
         stockList = json.loads(lastRequestedStocks)
     except:
         twimlResponse.message("An error occurred when loading stock data")
-        return twimlResponse
+        flaskResponse = make_response(twimlResponse, 200)
+        return flaskResponse
 
     stockInfo = stockInfoAsString(stockList, sg.FINANCE_PARAMS_EXTRA, "Here's some additional info\n")
 
@@ -105,14 +107,17 @@ def addToSchedule(request):
 
     if not lastRequestedStocks:
         twimlResponse.message("You must lookup stocks before subscribing to them")
-        return twimlResponse
+        flaskResponse = make_response(twimlResponse, 200)
+        return flaskResponse
 
     stockList = []
     try:
         stockList = json.loads(lastRequestedStocks)
     except:
         twimlResponse.message("An error occurred when loading stock data")
-        return twimlResponse
+
+        flaskResponse = make_response(twimlResponse, 200)
+        return flaskResponse
 
     if stockList:
         # Use PubSub to add this stocklist and number to the schedule
