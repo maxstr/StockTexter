@@ -10,6 +10,9 @@ if __name__ == '__main__':
 
     ScheduleServer = ss.ScheduleServer()
     SServerP = mp.Process(target = ScheduleServer.run)
+    
+    TServerP.start()
+    SServerP.start()
 
 
 
