@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect
+from flask import Flask, request, make_response
 import StockGrabber as sg
 import twilio.twiml
 import ScheduleServer as ss
@@ -12,31 +12,40 @@ TextServer = Flask(__name__)
 # the stocks listed in the lastRequested cookie and some additional info
 # about them
 def moreInfo(request):
-    response = twilio.twiml.Response()
+    twimlResponse = twilio.twiml.twimlresponse()
+
+    moreFooter = "Respond with SUBSCRIBE to subscribe to a daily update for these stocks"
 
     lastRequestedStocks = request.cookies.get('lastRequested')
 
     if not lastRequestedStocks:
-        response.message("You must lookup stocks before requesting more information on them")
-        return response
+        twimlResponse.message("You must lookup stocks before requesting more information on them")
+        return twimlResponse
 
     stockList = []
 
     try:
         stockList = json.loads(lastRequestedStocks)
     except:
-        response.message("An error occurred when loading stock data")
-        return response
+        twimlResponse.message("An error occurred when loading stock data")
+        return twimlResponse
 
     stockInfo = stockInfoAsString(stockList, sg.FINANCE_PARAMS_EXTRA, "Here's some additional info\n")
 
-    response.message(stockInfo)
-    return response
+    twimlResponse.message(stockInfo)
+    twimlResponse.message(moreFooter)
+
+    flaskResponse = make_response(twimlResponse)
+
+    flaskResponse.set_cookie('lastRequested', json.dumps(filter(lambda key: stockInfo[key]['Name'] != 'N/A', stockInfo)))
+
+    return flaskResponse
 
 
 # Given a request with just tickers, we return some basic information about those stocks
 def basicInfo(request):
-    response = twilio.twiml.Response()
+
+    twimlResponse = twilio.twiml.response()
 
     basicFooter = "Respond with MORE or SUBSCRIBE to get more info or to subscribe to daily alerts"
 
@@ -51,15 +60,21 @@ def basicInfo(request):
     # Get the stock info we want.
     stockInfo = stockInfoAsString(stockList, sg.FINANCE_PARAMS_BASIC)
 
-    response.message(stockInfo)
-    response.message(basicFooter)
+    twimlResponse.message(stockInfo)
+    twimlResponse.message(basicFooter)
 
-    return response
+    flaskResponse = make_response(twimlResponse)
+    # Drop all stocks that returned N/A, put the rest in a cookie
+    flaskResponse.set_cookie('lastRequested', json.dumps(filter(lambda key: stockInfo[key]['Name'] != 'N/A', stockInfo)))
+
+    return flaskResponse
 
 # Given a request for all information about a stock, returns a string with information about each ticker requested
 def allInfo(resp):
 
-    response = twilio.twiml.Response()
+    twimlResponse = twilio.twiml.response()
+
+    allFooter = "Respond with SUBSCRIBE to subscribe to a daily update for these stocks"
 
     # If we need to strip out the command, do so.
     incomingText = request.form['Body']
@@ -72,42 +87,55 @@ def allInfo(resp):
     # Get the stock info we want.
     stockInfo = stockInfoAsString(stockList, sg.FINANCE_PARAMS_ALL)
 
-    response.message(stockInfo)
+    twimlResponse.message(stockInfo)
+    twimlResponse.message(allFooter)
 
-    return response
+    flaskResponse = make_response(twimlResponse)
+
+    flaskResponse.set_cookie('lastRequested', json.dumps(filter(lambda key: stockInfo[key]['Name'] != 'N/A', stockInfo)))
+
+    return flaskResponse
+
 
 def addToSchedule(request):
 
-    response = twilio.twiml.Response()
+    twimlResponse = twilio.twiml.twimlResponse()
 
     lastRequestedStocks = request.cookies.get('lastRequested')
 
     if not lastRequestedStocks:
-        response.message("You must lookup stocks before subscribing to them")
-        return response
+        twimlResponse.message("You must lookup stocks before subscribing to them")
+        return twimlResponse
 
     stockList = []
     try:
         stockList = json.loads(lastRequestedStocks)
     except:
-        response.message("An error occurred when loading stock data")
-        return response
+        twimlResponse.message("An error occurred when loading stock data")
+        return twimlResponse
 
     if stockList:
         # Use PubSub to add this stocklist and number to the schedule
         pub.sendMessage('addToSchedule', tickers = stockList, phoneNumberString = request.form['From'])
-        response.message("You've subscribed to daily alerts for the following tickers: " + " ".join(stockList))
+        twimlResponse.message("You've subscribed to daily alerts for the following tickers: " + " ".join(stockList))
     else:
-        response.message("No valid stocks found to subscribe for.")
+        twimlResponse.message("No valid stocks found to subscribe for.")
 
-    return response
+
+    flaskResponse = make_response(twimlResponse)
+
+    return flaskResponse
 
 def removeFromSchedule(request):
-    response = twilio.twiml.Response()
-    return ""
+    twimlResponse = twilio.twiml.response()
 
 
-# List of possible commands (first word in message) and their associated functions for handling them. These functions need to accept a Flask request and returns a twilio twiml response
+    flaskResponse = make_response(twimlResponse)
+
+    return flaskResponse
+
+
+# List of possible commands (first word in message) and their associated functions for handling them. These functions need to accept a Flask request and returns a flask response
 
 COMMANDS = \
     { 'more' : moreInfo \
@@ -135,7 +163,7 @@ def stockResponse():
 
 
 
-    return str(response)
+    return response
 
 if __name__ == "__main__":
     TextServer.run(debug=True, host='0.0.0.0')

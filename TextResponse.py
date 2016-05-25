@@ -16,7 +16,7 @@ def stockInfoAsString(stockList, params=sg.FINANCE_PARAMS_BASIC, header = ""):
     returnLines = header
     for stock in stockList:
         if stockInfo[stock]['Name'] != 'N/A':
-            returnLines += "%s - %s \n" % (stockInfo[stock]['Name'], stock)
+            returnLines += "%s - %s \n" % (stockInfo[stock]['Name'], stock.upper())
             paramsNoName = filter(lambda key: key != 'Name', parameters.values())
             for param in paramsNoName:
                 returnLines += "%s : %s\n" % (param, stockInfo[stock][param])
