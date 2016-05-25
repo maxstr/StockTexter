@@ -7,11 +7,11 @@ from pubsub import pub
 
 
 # Given tickers, parameters as { 'yahooParam' : 'Parameter Name' }, and optionally a header returns a well-formatted string with information on each ticker.
-def stockInfoAsString(tickers, params=sg.FINANCE_PARAMS_BASIC, header = ""):
+def stockInfoAsString(stockList, params=sg.FINANCE_PARAMS_BASIC, header = ""):
     parameters = params.copy()
     parameters.update({'n' : 'Name'})
 
-    stockInfo = sg.stockInfoFromTickers(tickers, parameters)
+    stockInfo = sg.stockInfoFromTickers(stockList, parameters)
     #Return a response
     returnLines = header
     for stock in stockList:
