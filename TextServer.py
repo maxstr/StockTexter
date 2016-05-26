@@ -1,12 +1,16 @@
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, current_app
 import StockGrabber as sg
 import twilio.twiml
 import ScheduleServer as ss
 from TextResponse import stockInfoAsString
-from pubsub import pub
 import json
+import redis
 
 TextServer = Flask(__name__)
+TextServer.config['REDISPORT'] = 6379
+TextServer.config['REDISHOST'] = 'localhost'
+TextServer.config['REDISDB'] = 0
+TextServer.config['REDISTOPIC'] = 'schedulerMessage'
 
 
 # Given a request asking for more information, returns a string with
@@ -99,39 +103,6 @@ def allInfo(resp):
 
     return flaskResponse
 
-def addToSchedule1(request):
-
-    twimlResponse = twilio.twiml.Response()
-
-    lastRequestedStocks = request.cookies.get('lastRequested')
-
-    if not lastRequestedStocks:
-        twimlResponse.message("You must lookup stocks before subscribing to them")
-        flaskResponse = make_response(str(twimlResponse), 200)
-        return flaskResponse
-
-    stockList = []
-    try:
-        stockList = json.loads(lastRequestedStocks)
-    except:
-	print lastRequestedStocks
-	print stockList
-        twimlResponse.message("An error occurred when loading stock data")
-
-        flaskResponse = make_response(str(twimlResponse), 200)
-        return flaskResponse
-
-    if stockList:
-        # Use PubSub to add this stocklist and number to the schedule
-        pub.sendMessage('addToSchedule', tickers = stockList, phoneNumberString = request.form['From'], freq = 1)
-        twimlResponse.message("You've subscribed to daily alerts for the following tickers: " + " ".join(stockList))
-    else:
-        twimlResponse.message("No valid stocks found to subscribe for.")
-
-
-    flaskResponse = make_response(str(twimlResponse), 200)
-
-    return flaskResponse
 
 def addToSchedule(request):
 
@@ -156,9 +127,15 @@ def addToSchedule(request):
         return flaskResponse
 
     if stockList:
-        # Use PubSub to add this stocklist and number to the schedule
-        pub.sendMessage('addToSchedule', tickers = stockList, phoneNumberString = request.form['From'])
+        # Pub via redis
+        redis = redis.StrictRedis(host=current_app.config['REDISHOST'], port=current_app.config['REDISPORT'],db=current_app.config['REDISDB'])
+        message = { 'action' : 'addToSchedule' \
+                  , 'args' : { 'tickers' : stockList \
+                             , 'phoneNumberString' : request.form['From'] }
+                  }
+        redis.publish(current_app.config['REDISTOPIC'], json.dumps(message))
         twimlResponse.message("You've subscribed to daily alerts for the following tickers: " + " ".join(stockList))
+
     else:
         twimlResponse.message("No valid stocks found to subscribe for.")
 
@@ -184,8 +161,7 @@ COMMANDS = \
     , 'default' : basicInfo \
     , 'basic' : basicInfo \
     , 'all' : allInfo \
-    , 'unsubscribe' : removeFromSchedule \
-    , 'subscribe1' : addToSchedule1 }
+    , 'unsubscribe' : removeFromSchedule }\
 
 
 

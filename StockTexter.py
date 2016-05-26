@@ -11,17 +11,19 @@ if __name__ == '__main__':
 
     TextServer = ts.TextServer
     TServerP = mp.Process(target = TextServer.run, kwargs = \
-                { 'debug' : True, 'host': '0.0.0.0' , 'use_reloader' : False})
+                { 'debug' : True, 'host': '0.0.0.0' })
 
     ScheduleServer = ss.ScheduleServer()
-    ScheduleServer.run()
-    pub.subscribe(ScheduleServer.addToSchedule, 'addToSchedule')
+    SServerP = mp.Process(target = ScheduleServer.run)
 
-    
+
     TServerP.start()
+    SServerP.start()
+    print "flask started"
     while True:
-	sleep(100)
+	sleep(10)
 	print ScheduleServer.scheduler.get_jobs()
+        print "text"
         pass
 
 
