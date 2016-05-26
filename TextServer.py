@@ -128,12 +128,12 @@ def addToSchedule(request):
 
     if stockList:
         # Pub via redis
-        redis = redis.StrictRedis(host=current_app.config['REDISHOST'], port=current_app.config['REDISPORT'],db=current_app.config['REDISDB'])
+        red = redis.StrictRedis(host=current_app.config['REDISHOST'], port=current_app.config['REDISPORT'],db=current_app.config['REDISDB'])
         message = { 'action' : 'addToSchedule' \
                   , 'args' : { 'tickers' : stockList \
                              , 'phoneNumberString' : request.form['From'] }
                   }
-        redis.publish(current_app.config['REDISTOPIC'], json.dumps(message))
+        red.publish(current_app.config['REDISTOPIC'], json.dumps(message))
         twimlResponse.message("You've subscribed to daily alerts for the following tickers: " + " ".join(stockList))
 
     else:

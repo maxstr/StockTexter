@@ -1,6 +1,5 @@
 import TextServer as ts
 import logging
-from pubsub import pub
 import ScheduleServer as ss
 import multiprocessing as mp
 from time import sleep
@@ -17,7 +16,9 @@ if __name__ == '__main__':
     SServerP = mp.Process(target = ScheduleServer.run)
 
 
+    print "starting Text Server"
     TServerP.start()
+    print "server started"
     SServerP.start()
     print "flask started"
     while True:
