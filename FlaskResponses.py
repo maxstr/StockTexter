@@ -116,8 +116,8 @@ def stockInfoPretty(request, command = '', prettyFunc = sg.stockInfoBasicPretty)
         stockList = words
 
     # Get the lines returned by our function
-    stockLines = prettFunc(stockList)
-    for line in stockLines
+    stockLines = prettyFunc(stockList)
+    for line in stockLines:
         twimlResponse.message(line)
 
     flaskResponse = make_response(str(twimlResponse), 200)

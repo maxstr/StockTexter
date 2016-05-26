@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*- 
 import urlparse
 from StringIO import StringIO
 from urllib import urlencode
@@ -36,7 +37,7 @@ def stockInfoFromTickers(tickers, paramDict = FINANCE_PARAMS_BASIC):
 
     for index, row in enumerate(csvReader):
         # Go from b2, b3 etc to Ask, Bid...
-        paramNames = map(lambda param: FINANCE_PARAMS_ALL[param], parameters)
+        paramNames = map(lambda param: paramDict[param], parameters)
         # Generate a mapping of Ask:AskVal, Bid:BidVal
         stockValues = zip(paramNames, row)
         returnDict[tickers[index]].update(stockValues)
@@ -63,9 +64,9 @@ def stockInfoAsString(stockList, params=FINANCE_PARAMS_BASIC, header = ""):
 
     return returnLines
 
-def stockInfoBasicPretty(stocklist):
+def stockInfoBasicPretty(stockList):
 
-    paramsPretty = { 'a': 'Ask', 'c1' : 'Change', 'n' : 'Name', 'p2': 'Percent Change'}
+    parameters = { 'a': 'Ask', 'c1' : 'Change', 'n' : 'Name', 'p2': 'Percent Change'}
 
     stockInfo = stockInfoFromTickers(stockList, parameters)
     validStocks = set(getValidStocks(stockList))
@@ -76,8 +77,8 @@ def stockInfoBasicPretty(stocklist):
     for stock in validStocks:
         newText = "%s - %s \n" % (stockInfo[stock]['Name'], stock.upper())
         # Ask / ^ price/percent
-        arrow = (⬆️ if ('+' in stockInfo[stock]['Change']) else ⬇️)
-        newText += "%s - %s%s/%s \n" % (stockInfo[stock]['Ask'], arrow, stockInfo[stock]['Change'], stockInfo[stock]['Percent Change'], stockInfo[stock]['Previous Close'])
+        arrow = (u'⬆️' if ('+' in stockInfo[stock]['Change']) else u'⬇️')
+        newText += "%s - %s%s/%s \n" % (stockInfo[stock]['Ask'], arrow, stockInfo[stock]['Change'], stockInfo[stock]['Percent Change'])
 
         # Determine if we want this stock in the current message, or the message afterwards
         if len(newText + returnLines[currentIndex]) >= MAX_TEXT_LENGTH:
@@ -85,14 +86,16 @@ def stockInfoBasicPretty(stocklist):
             currentIndex += 1
         else:
             returnLines[currentIndex] += newText
-    returnLines.append("The following tickers could not be found: %s" % " ".join(list(validStocks - set(stockList)))):
+    invalidStocks = list(validStocks - set(stockList))
+    if invalidStocks:
+	    returnLines.append("The following tickers could not be found: %s" % (" ".join(invalidStocks)) )
 
     return returnLines
 
 
-def stockInfoAllPretty(stocklist):
+def stockInfoAllPretty(stockList):
 
-    paramsPretty = { 'a': 'Ask', 'c1' : 'Change', 'n' : 'Name', 'p2' : 'Percent Change', 'o':'Open', 'h' : 'High', 'g': 'Low', 'p' : 'Previous Close'}
+    parameters= { 'a': 'Ask', 'c1' : 'Change', 'n' : 'Name', 'p2' : 'Percent Change', 'o':'Open', 'h' : 'High', 'g': 'Low', 'p' : 'Previous Close'}
 
     stockInfo = stockInfoFromTickers(stockList, parameters)
     validStocks = str(getValidStocks(stockList))
@@ -103,7 +106,7 @@ def stockInfoAllPretty(stocklist):
     for stock in validStocks:
         newText = "%s - %s \n" % (stockInfo[stock]['Name'], stock.upper())
         # Ask / ^ price/percent
-        arrow = (⬆️ if ('+' in stockInfo[stock]['Change']) else ⬇️)
+        arrow = ('⬆️' if ('+' in stockInfo[stock]['Change']) else '⬇️' )
         newText += "%s - %s %s/%s \n" % (stockInfo[stock]['Ask'], arrow, stockInfo[stock]['Change'], stockInfo[stock]['Percent Change'])
         newText += """\
 Open: %(Open)
@@ -117,6 +120,10 @@ Previous Close: %(Previous Close)""" % stockInfo[stock]
             currentIndex += 1
         else:
             returnLines[currentIndex] += newText
+    invalidStocks = list(validStocks - set(stockList))
+    if invalidStocks:
+	    returnLines.append("The following tickers could not be found: %s" % (" ".join(invalidStocks)) )
+
 
     return returnLines
 
