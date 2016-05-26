@@ -92,7 +92,7 @@ def stockInfoBasicPretty(stockList, maxLength = MAX_TEXT_FLASK_LENGTH):
         else:
             returnLines[currentIndex] += newText
 
-    invalidStocks = list(validStocks - set(stockList))
+    invalidStocks = list(set(stockList) - validStocks)
     if invalidStocks:
 	    returnLines.append("The following tickers could not be found: %s" % (" ".join(invalidStocks)) )
 
@@ -129,7 +129,8 @@ Previous Close: %(Previous Close)s""" % stockInfo[stock]
             currentIndex += 1
         else:
             returnLines[currentIndex] += newText
-    invalidStocks = list(validStocks - set(stockList))
+
+    invalidStocks = list(set(stockList) - validStocks)
     if invalidStocks:
 	    returnLines.append("The following tickers could not be found: %s" % (" ".join(invalidStocks)) )
 
