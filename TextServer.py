@@ -24,9 +24,9 @@ db = SQLAlchemy(TextServer)
 COMMANDS = \
     { 'more' : fr.moreInfo \
     , 'subscribe' : fr.addToSchedule \
-    , 'default' : fr.basicInfo \
-    , 'basic' : fr.basicInfo \
-    , 'all' : fr.allInfo \
+    , 'default' : fr.basicInfoP \
+    , 'basic' : fr.basicInfoP \
+    , 'all' : fr.allInfoP \
     , 'plsstop' : fr.removeFromSchedule \
     , 'subscribedb' : fr.addToScheduleDB \
     , 'start' : (lambda _ : make_response(str(twilio.twiml.Response())))
@@ -46,9 +46,9 @@ def stockResponse():
     userExists = bool(User.query.filter_by(number=userNumber).all())
     if (not userExists) or firstWord.lower() == 'start':
         tf.sendMessage("""\
-We noticed this is your first time using StockTexter. Here's a user guide!
+This is StockTexter. Here's a use guide!
 1. Text [all/basic] (tickers)
-2. Text subscribe afterwards if you want daily updates on these stocks.
+2. Text subscribe for daily alerts
 3. Text helppls to see this message again"""\
                         , '', userNumber, current_app.config['FROMNUMBER'])
 	if (not userExists):

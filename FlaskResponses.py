@@ -62,15 +62,15 @@ We noticed this is your first time using StockTexter. Here's a user guide!
 
 helpMessage = partial(textResponse \
         , response = """\
-Here's how to use this service:
-1. Text [all/basic] (tickers)
-2. Text subscribe afterwards if you want daily updates on these stocks.
-3. Text helppls to see this message again""" \
+Possible actions: commands
+1. For info : [all/basic] (tickers)
+2. For daily updates: subscribe
+3. For help: helppls""" \
         , footer = '')
 
 
 
-def stockInfo(request, footer = "", command = '', stockParams = sg.FINANCE_PARAMS_BASIC):
+def stockInfoBasic(request, footer = "", command = '', stockParams = sg.FINANCE_PARAMS_BASIC):
     twimlResponse = twilio.twiml.Response()
 
     incomingText = request.form['Body']
@@ -91,17 +91,47 @@ def stockInfo(request, footer = "", command = '', stockParams = sg.FINANCE_PARAM
 
     return flaskResponse
 
-basicInfo = partial(stockInfo \
-        , footer = "Respond with MORE or SUBSCRIBE to get more info or to subscribe to daily alerts" \
+basicInfo = partial(stockInfoBasic \
+        , footer = "" \
         , command = 'basic' \
         , stockParams = sg.FINANCE_PARAMS_BASIC )
 
 
-allInfo = partial(stockInfo \
-        , footer = "Respond with MORE or SUBSCRIBE to get more info or to subscribe to daily alerts" \
+allInfo = partial(stockInfoBasic \
+        , footer = "" \
         , command = 'all' \
         , stockParams = sg.FINANCE_PARAMS_ALL)
 
+# Accepts a request and a function that converts a list of stocks into a list of messages to send
+
+def stockInfoPretty(request, command = '', prettyFunc = sg.stockInfoBasicPretty):
+    twimlResponse = twilio.twiml.Response()
+
+    incomingText = request.form['Body']
+    # If we need to strip out the command, do so.
+    words = incomingText.split()
+    if words[0].lower() == command:
+        stockList = words[1:]
+    else:
+        stockList = words
+
+    # Get the lines returned by our function
+    stockLines = prettFunc(stockList)
+    for line in stockLines
+        twimlResponse.message(line)
+
+    flaskResponse = make_response(str(twimlResponse), 200)
+    flaskResponse.set_cookie('lastRequested', json.dumps(stockList).replace(',', '|'))
+
+    return flaskResponse
+
+basicInfoP = partial(stockInfoPretty\
+        , command = "basic" \
+        , prettyFunc = sg.stockInfoBasicPretty )
+
+allInfoP = partial(stockInfoPretty\
+        , command = 'all' \
+        , prettyFunc = sg.stockInfoAllPretty)
 
 
 
