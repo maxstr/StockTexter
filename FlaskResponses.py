@@ -14,7 +14,6 @@ from functools import partial
 def moreInfo(request):
     twimlResponse = twilio.twiml.Response()
 
-    moreFooter = "Respond with SUBSCRIBE to subscribe to a daily update for these stocks"
 
     lastRequestedStocks = request.cookies.get('lastRequested')
 
@@ -25,20 +24,24 @@ def moreInfo(request):
 
     stockList = []
 
+
     try:
-        stockList = json.loads(lastRequestedStocks)
+        stockList = json.loads(lastRequestedStocks.replace("|", ','))
     except:
         twimlResponse.message("An error occurred when loading stock data")
         flaskResponse = make_response(str(twimlResponse), 200)
         return flaskResponse
 
-    stockInfo = sg.stockInfoAsString(stockList, sg.FINANCE_PARAMS_EXTRA, "Here's some additional info\n")
+    stockList = map(lambda a: a.upper(), stockList)
 
-    twimlResponse.message(stockInfo)
-    twimlResponse.message(moreFooter)
+
+
+    stockLines = sg.stockInfoAllPretty(stockList, 160)
+    for line in stockLines:
+        twimlResponse.message(line)
 
     flaskResponse = make_response(str(twimlResponse), 200)
-    flaskResponse.set_cookie('lastRequested', json.dumps(stockList).replace(",", "|"))
+    flaskResponse.set_cookie('lastRequested', json.dumps(stockList).replace(',', '|'))
 
     return flaskResponse
 
@@ -81,6 +84,7 @@ def stockInfoBasic(request, footer = "", command = '', stockParams = sg.FINANCE_
     else:
         stockList = words
 
+    stockList = map(lambda a: a.upper(), stockList)
     # Get the stock info we want.
     stockInfo = sg.stockInfoAsString(stockList, stockParams)
 
@@ -115,6 +119,8 @@ def stockInfoPretty(request, command = '', prettyFunc = sg.stockInfoBasicPretty)
     else:
         stockList = words
 
+    stockList = map(lambda a: a.upper(), stockList)
+
     # Get the lines returned by our function
     stockLines = prettyFunc(stockList)
     for line in stockLines:
@@ -148,14 +154,13 @@ def addToScheduleDB(request):
 
     stockList = []
 
-    stockList = sg.getValidStocks(json.loads(lastRequestedStocks))
-
     try:
         stockList = sg.getValidStocks(json.loads(lastRequestedStocks))
     except:
         twimlResponse.message("An error occurred when loading stock data")
         flaskResponse = make_response(str(twimlResponse), 200)
         return flaskResponse
+    stockList = map(lambda a: a.upper(), stockList)
 
     if stockList:
         # Pub via redis
@@ -167,7 +172,7 @@ def addToScheduleDB(request):
                              , 'freq' : 2 }
                   }
         red.publish(current_app.config['REDISTOPIC'], json.dumps(message))
-        twimlResponse.message("You've subscribed to daily alerts for the following tickers: " + " ".join(stockList))
+        twimlResponse.message("You've subscribed to daily alerts for the following tickers: %s \n\nReply with PLSSTOP to cancel further messages" % " ".join(stockList))
 
     else:
         twimlResponse.message("No valid stocks found to subscribe for.")
