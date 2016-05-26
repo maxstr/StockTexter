@@ -19,6 +19,8 @@ db = SQLAlchemy(TextServer)
 
 # List of possible commands (first word in message) and their associated functions for handling them. These functions need to accept a Flask request and returns a flask response
 
+# Send an empty response for a start message
+
 COMMANDS = \
     { 'more' : fr.moreInfo \
     , 'subscribe' : fr.addToSchedule \
@@ -27,7 +29,8 @@ COMMANDS = \
     , 'all' : fr.allInfo \
     , 'plsstop' : fr.removeFromSchedule \
     , 'subscribedb' : fr.addToScheduleDB \
-    , 'start' : fr.firstMessage }\
+    , 'start' : (lambda _ : make_response(str(twilio.twiml.Response())))
+    , 'helppls' : fr.helpMessage}\
 
 
 
@@ -35,27 +38,28 @@ COMMANDS = \
 @TextServer.route("/", methods=['POST'])
 def stockResponse():
 
+    incomingText = request.form['Body']
+    firstWord = incomingText.split()[0].lower()
+
     # Determine if this is a first time user and send them a nice message if so
     userNumber = request.form['From']
-    if not User.query.filter_by(number=userNumber).all():
-        newUser = User(userNumber)
-        db.session.add(newUser)
-        db.session.commit()
+    userExists = bool(User.query.filter_by(number=userNumber).all())
+    if (not userExists) or firstWord.lower() == 'start':
         tf.sendMessage("""\
 We noticed this is your first time using StockTexter. Here's a user guide!
 1. Text [all/basic] (tickers)
 2. Text subscribe afterwards if you want daily updates on these stocks.
 3. Text helppls to see this message again"""\
                         , '', userNumber, current_app.config['FROMNUMBER'])
+	if (not userExists):
+		newUser = User(userNumber)
+		db.session.add(newUser)
+		db.session.commit()
 
 
 
     # Look at incoming text, try and match the first word against our list of commands.
     # If no match, we go with the default handler
-    incomingText = request.form['Body']
-
-    firstWord = incomingText.split()[0].lower()
-
     if firstWord in COMMANDS:
         response = COMMANDS[firstWord](request)
     else:

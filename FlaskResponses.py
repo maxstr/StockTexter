@@ -1,4 +1,5 @@
 from flask import request, make_response, current_app
+import redis
 import twilio.twiml
 import StockGrabber as sg
 import json
@@ -31,13 +32,13 @@ def moreInfo(request):
         flaskResponse = make_response(str(twimlResponse), 200)
         return flaskResponse
 
-    stockInfo = sg.StockInfoAsString(stockList, sg.FINANCE_PARAMS_EXTRA, "Here's some additional info\n")
+    stockInfo = sg.stockInfoAsString(stockList, sg.FINANCE_PARAMS_EXTRA, "Here's some additional info\n")
 
     twimlResponse.message(stockInfo)
     twimlResponse.message(moreFooter)
 
     flaskResponse = make_response(str(twimlResponse), 200)
-    flaskResponse.set_cookie('lastRequested', json.dumps(stockList))
+    flaskResponse.set_cookie('lastRequested', json.dumps(stockList).replace(",", "|"))
 
     return flaskResponse
 
@@ -45,7 +46,7 @@ def moreInfo(request):
 
 def textResponse(request, response = "", footer = ""):
     twimlResponse = twilio.twiml.Response()
-    twimlResponse.message(text + "\n" + footer)
+    twimlResponse.message(response + "\n" + footer)
 
     flaskResponse = make_response(str(twimlResponse), 200)
     return flaskResponse
@@ -81,18 +82,18 @@ def stockInfo(request, footer = "", command = '', stockParams = sg.FINANCE_PARAM
         stockList = words
 
     # Get the stock info we want.
-    stockInfo = sg.StockInfoAsString(stockList, stockParams)
+    stockInfo = sg.stockInfoAsString(stockList, stockParams)
 
     twimlResponse.message(stockInfo + "\n" + footer)
 
     flaskResponse = make_response(str(twimlResponse), 200)
-    flaskResponse.set_cookie('lastRequested', json.dumps(stockList))
+    flaskResponse.set_cookie('lastRequested', json.dumps(stockList).replace(',', '|'))
 
     return flaskResponse
 
 basicInfo = partial(stockInfo \
         , footer = "Respond with MORE or SUBSCRIBE to get more info or to subscribe to daily alerts" \
-        , command = '' \
+        , command = 'basic' \
         , stockParams = sg.FINANCE_PARAMS_BASIC )
 
 
@@ -108,7 +109,7 @@ def addToScheduleDB(request):
 
     twimlResponse = twilio.twiml.Response()
 
-    lastRequestedStocks = request.cookies.get('lastRequested')
+    lastRequestedStocks = request.cookies.get('lastRequested').replace("|", ",")
 
     if not lastRequestedStocks:
         twimlResponse.message("You must lookup stocks before subscribing to them")
@@ -116,6 +117,10 @@ def addToScheduleDB(request):
         return flaskResponse
 
     stockList = []
+
+    print lastRequestedStocks
+    stockList = sg.getValidStocks(json.loads(lastRequestedStocks))
+
     try:
         stockList = sg.getValidStocks(json.loads(lastRequestedStocks))
     except:
@@ -148,7 +153,7 @@ def addToSchedule(request):
 
     twimlResponse = twilio.twiml.Response()
 
-    lastRequestedStocks = request.cookies.get('lastRequested')
+    lastRequestedStocks = request.cookies.get('lastRequested').replace("|", ",")
 
     if not lastRequestedStocks:
         twimlResponse.message("You must lookup stocks before subscribing to them")

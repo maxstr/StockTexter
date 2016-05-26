@@ -16,15 +16,10 @@ if __name__ == '__main__':
     SServerP = mp.Process(target = ScheduleServer.run)
 
 
-    print "starting Text Server"
     TServerP.start()
-    print "server started"
     SServerP.start()
-    print "flask started"
     while True:
 	sleep(10)
-	print ScheduleServer.scheduler.get_jobs()
-        print "text"
         pass
 
 
