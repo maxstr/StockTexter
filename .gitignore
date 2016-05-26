@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *.sqlite
+*.rdb
 *$py.class
 
 # C extensions

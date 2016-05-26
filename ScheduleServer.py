@@ -2,7 +2,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 import StockGrabber as sg
 from twilio.rest import TwilioRestClient
-import TextResponse as tr
+import TwilioFunctions as tf
 import redis
 from time import sleep
 import json
@@ -15,15 +15,13 @@ SENDING_NUMBER = "+18052044765"
 
 class ScheduleServer:
 
-    def __init__(self, sqlite = None, twilioSID = TWILIO_ACCOUNT_SID, twilioToken = TWILIO_AUTH_TOKEN \
-                , outgoingNumber = SENDING_NUMBER \
+    def __init__(self
+                , sqlite = None \
                 , redisConfig = {'host':'localhost', 'port':6379, 'db':0} \
                 , topic = 'schedulerMessage'):
 
         self.scheduler = BackgroundScheduler()
-#        self.scheduler.add_jobstore('sqlalchemy', url=(sqlite if sqlite else 'sqlite:///schedule.sqlite'))
-        self.restClient = TwilioRestClient(twilioSID, twilioToken)
-        self.fromNumber = outgoingNumber
+        self.scheduler.add_jobstore('sqlalchemy', url=(sqlite if sqlite else 'sqlite:///schedule.sqlite'))
 
         self.redisHandle = redis.StrictRedis(**redisConfig)
         self.pub = self.redisHandle.pubsub()
@@ -39,8 +37,8 @@ class ScheduleServer:
         self.scheduler.remove_job(str(hash(phoneNumberString)))
 
 
-    def addToSchedule(self, tickers, phoneNumberString, freq = 1440):
-        self.scheduler.add_job(self.sendUpdate, 'interval', seconds=3, id=str(hash(phoneNumberString)), replace_existing=True, args=[tickers, phoneNumberString] )
+    def addToSchedule(self, tickers, phoneNumberString, fromNumber, freq = 1440):
+        self.scheduler.add_job(tf.sendUpdate, 'interval', minutes=freq, id=str(hash(phoneNumberString)), replace_existing=True, args=[tickers, phoneNumberString, fromNumber] )
 
 
     def run(self):
@@ -58,11 +56,3 @@ class ScheduleServer:
                 sleep(1)
         except (KeyboardInterrupt, SystemExit):
             pass
-
-    def sendUpdate(self, tickers, phoneNumberString):
-
-        updateLines = tr.stockInfoAsString(tickers, sg.FINANCE_PARAMS_ALL)
-        footer = "\n Respond with UNSUBSCRIBE to cancel your scheduled alert"
-        message1 = self.restClient.messages.create(to=phoneNumberString, from_=self.fromNumber, body = updateLines)
-        message2 = self.restClient.messages.create(to=phoneNumberString, from_=self.fromNumber, body=footer)
-

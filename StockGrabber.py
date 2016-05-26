@@ -4,6 +4,9 @@ from urllib import urlencode
 import requests
 import csv
 
+# Functions for interacting with Yahoo! Stock quote API.
+
+
 # Info from http://www.jarloo.com/yahoo_finance/
 FINANCE_API_URL = "http://finance.yahoo.com/d/quotes.csv?"
 FINANCE_PARAMS_BASIC = { 'a': 'Ask', 'b' : 'Bid', 'c' : 'Change', 'n' : 'Name' }
@@ -34,18 +37,35 @@ def stockInfoFromTickers(tickers, paramDict = FINANCE_PARAMS_BASIC):
 
     return returnDict
 
+# Given tickers, parameters as { 'yahooParam' : 'Parameter Name' }, and optionally a header returns a well-formatted string with information on each ticker.
+def stockInfoAsString(stockList, params=FINANCE_PARAMS_BASIC, header = ""):
+    parameters = params.copy()
+    parameters.update({'n' : 'Name'})
 
+    stockInfo = stockInfoFromTickers(stockList, parameters)
+    #Return a response
+    returnLines = header
+    for stock in stockList:
+        if stockInfo[stock]['Name'] != 'N/A':
+            returnLines += "%s - %s \n" % (stockInfo[stock]['Name'], stock.upper())
+            paramsNoName = filter(lambda key: key != 'Name', parameters.values())
+            for param in paramsNoName:
+                returnLines += "%s : %s\n" % (param, stockInfo[stock][param])
+        else:
+            returnLines += "%s - Ticker could not be found" % stock
+            returnLines += "\n"
 
+    return returnLines
 
+# Given a list of tickers, returns which are valid
+def getValidStocks(stockList):
+    returnList = []
+    parameters = { 'n' : "Name" }
+    stockInfo = stockInfoFromTickers(stockList, parameters)
+    for stock in stockList:
+        if stockInfo[stock]['Name'] != 'N/A':
+            returnList.append(stock)
 
-
-
-
-
-
-
-
-
-
+    return returnList
 
 
