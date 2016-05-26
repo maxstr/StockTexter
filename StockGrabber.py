@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 import urlparse
 from StringIO import StringIO
 from urllib import urlencode
@@ -78,7 +78,10 @@ def stockInfoBasicPretty(stockList):
         newText = "%s - %s \n" % (stockInfo[stock]['Name'], stock.upper())
         # Ask / ^ price/percent
         arrow = (u'⬆️' if ('+' in stockInfo[stock]['Change']) else u'⬇️')
-        newText += "%s - %s%s/%s \n" % (stockInfo[stock]['Ask'], arrow, stockInfo[stock]['Change'], stockInfo[stock]['Percent Change'])
+        newText += "%.2f - %s%.2f/%.2f \n" % (float(stockInfo[stock]['Ask'])
+                                       , arrow \
+                                       , float(stockInfo[stock]['Change'].translate(None, "+-")) \
+                                       , float(stockInfo[stock]['Percent Change'].translate(None, "+-")))
 
         # Determine if we want this stock in the current message, or the message afterwards
         if len(newText + returnLines[currentIndex]) >= MAX_TEXT_LENGTH:
@@ -107,7 +110,10 @@ def stockInfoAllPretty(stockList):
         newText = "%s - %s \n" % (stockInfo[stock]['Name'], stock.upper())
         # Ask / ^ price/percent
         arrow = ('⬆️' if ('+' in stockInfo[stock]['Change']) else '⬇️' )
-        newText += "%s - %s %s/%s \n" % (stockInfo[stock]['Ask'], arrow, stockInfo[stock]['Change'], stockInfo[stock]['Percent Change'])
+        newText += "%.2f - %s%.2f/%.2f \n" % (float(stockInfo[stock]['Ask'])
+                                       , arrow
+                                       , float(stockInfo[stock]['Change'].translate(None, "+-"))
+                                       , float(stockInfo[stock]['Percent Change'].translate(None, "+-")))
         newText += """\
 Open: %(Open)
 High: %(High)
