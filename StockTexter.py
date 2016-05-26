@@ -19,7 +19,6 @@ if __name__ == '__main__':
     TServerP.start()
     SServerP.start()
     while True:
-	sleep(10)
         pass
 
 

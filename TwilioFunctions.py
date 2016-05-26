@@ -9,13 +9,17 @@ TWILIO_AUTH_TOKEN = "***REMOVED***"
 RestClient = TwilioRestClient(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 def sendUpdate(tickers, phoneNumberString, fromNumber):
+    updateLines = sg.stockInfoAllPretty(tickers, sg.MAX_TEXT_LENGTH)
+    for message in updateLines:
+	sendMessage(message, '', phoneNumberString, fromNumber)
 
-    updateLines = sg.stockInfoAsString(tickers, sg.FINANCE_PARAMS_ALL)
     footer = "\n Respond with PLSSTOP to cancel your scheduled alert"
-    sendMessage(updateLines, footer, phoneNumberString, fromNumber)
+    sendMessage(footer, '', phoneNumberString, fromNumber)
 
 
 def sendMessage(body, footer, phoneNumberString, fromNumber):
-    RestClient.messages.create(to=phoneNumberString, from_=fromNumber, body = body + "\n" + footer)
+    RestClient.messages.create(to=phoneNumberString, from_=fromNumber, body = body )
+    if footer:
+	    RestClient.messages.create(to=phoneNumberString, from_=fromNumber, body = footer)
 
 

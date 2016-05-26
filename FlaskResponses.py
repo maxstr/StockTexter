@@ -57,7 +57,7 @@ firstMessage = partial(textResponse \
 We noticed this is your first time using StockTexter. Here's a user guide!
 1. Text [all/basic] (tickers)
 2. Text subscribe afterwards if you want daily updates on these stocks.
-3. Text helppls to see this message again""" \
+3. Text plshelp to see this message again""" \
         , footer = '')
 
 helpMessage = partial(textResponse \
@@ -65,7 +65,7 @@ helpMessage = partial(textResponse \
 Possible actions: commands
 1. For info : [all/basic] (tickers)
 2. For daily updates: subscribe
-3. For help: helppls""" \
+3. For help: plshelp""" \
         , footer = '')
 
 
@@ -148,7 +148,6 @@ def addToScheduleDB(request):
 
     stockList = []
 
-    print lastRequestedStocks
     stockList = sg.getValidStocks(json.loads(lastRequestedStocks))
 
     try:
@@ -165,7 +164,7 @@ def addToScheduleDB(request):
                   , 'args' : { 'tickers' : stockList \
                              , 'phoneNumberString' : request.form['From'] \
                              , 'fromNumber' : current_app.config['FROMNUMBER'] \
-                             , 'freq' : 1 }
+                             , 'freq' : 2 }
                   }
         red.publish(current_app.config['REDISTOPIC'], json.dumps(message))
         twimlResponse.message("You've subscribed to daily alerts for the following tickers: " + " ".join(stockList))

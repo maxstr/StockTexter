@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 import urlparse
 from StringIO import StringIO
 from urllib import urlencode
 import requests
 import csv
+from flask import current_app
 
 # Functions for interacting with Yahoo! Stock quote API.
 
@@ -12,11 +12,12 @@ import csv
 FINANCE_API_URL = "http://finance.yahoo.com/d/quotes.csv?"
 FINANCE_PARAMS_BASIC = { 'a': 'Ask', 'b' : 'Bid', 'c' : 'Change', 'n' : 'Name' }
 
-FINANCE_PARAMS_EXTRA = { 'g' : 'Day Low', 'h': 'Day High', 'v': 'Volume', 't7': 'Ticker Trend', 'n' : 'Name' }
+FINANCE_PARAMS_EXTRA = { 'g' : 'Day Low', 'h': 'Day High', 'v': 'Volume', 'n' : 'Name' }
 FINANCE_PARAMS_ALL = FINANCE_PARAMS_BASIC.copy()
 FINANCE_PARAMS_ALL.update(FINANCE_PARAMS_EXTRA)
 
-MAX_TEXT_LENGTH = 153
+MAX_TEXT_FLASK_LENGTH = 160
+MAX_TEXT_LENGTH = 1600
 
 
 
@@ -64,9 +65,10 @@ def stockInfoAsString(stockList, params=FINANCE_PARAMS_BASIC, header = ""):
 
     return returnLines
 
-def stockInfoBasicPretty(stockList):
+def stockInfoBasicPretty(stockList, maxLength = MAX_TEXT_FLASK_LENGTH):
 
     parameters = { 'a': 'Ask', 'c1' : 'Change', 'n' : 'Name', 'p2': 'Percent Change'}
+
 
     stockInfo = stockInfoFromTickers(stockList, parameters)
     validStocks = set(getValidStocks(stockList))
@@ -75,20 +77,21 @@ def stockInfoBasicPretty(stockList):
     currentIndex = 0
 
     for stock in validStocks:
-        newText = "%s - %s \n" % (stockInfo[stock]['Name'], stock.upper())
+        newText = "\n%s - %s \n" % (stockInfo[stock]['Name'], stock.upper())
         # Ask / ^ price/percent
-        arrow = (u'⬆️' if ('+' in stockInfo[stock]['Change']) else u'⬇️')
-        newText += "%.2f - %s%.2f/%.2f \n" % (float(stockInfo[stock]['Ask'])
+        arrow = ('+' if ('+' in stockInfo[stock]['Change']) else '-')
+        newText += "$%.2f | %s%.2f/%.2f%%\n" % (float(stockInfo[stock]['Ask'])
                                        , arrow \
                                        , float(stockInfo[stock]['Change'].translate(None, "+-")) \
-                                       , float(stockInfo[stock]['Percent Change'].translate(None, "+-")))
+                                       , float(stockInfo[stock]['Percent Change'].translate(None, "+%-")))
 
         # Determine if we want this stock in the current message, or the message afterwards
-        if len(newText + returnLines[currentIndex]) >= MAX_TEXT_LENGTH:
+        if len(newText + returnLines[currentIndex]) >= maxLength:
             returnLines.append(newText)
             currentIndex += 1
         else:
             returnLines[currentIndex] += newText
+
     invalidStocks = list(validStocks - set(stockList))
     if invalidStocks:
 	    returnLines.append("The following tickers could not be found: %s" % (" ".join(invalidStocks)) )
@@ -96,32 +99,32 @@ def stockInfoBasicPretty(stockList):
     return returnLines
 
 
-def stockInfoAllPretty(stockList):
+def stockInfoAllPretty(stockList, maxLength = MAX_TEXT_FLASK_LENGTH):
 
     parameters= { 'a': 'Ask', 'c1' : 'Change', 'n' : 'Name', 'p2' : 'Percent Change', 'o':'Open', 'h' : 'High', 'g': 'Low', 'p' : 'Previous Close'}
 
     stockInfo = stockInfoFromTickers(stockList, parameters)
-    validStocks = str(getValidStocks(stockList))
+    validStocks = set(getValidStocks(stockList))
 
     returnLines = [""]
     currentIndex = 0
 
     for stock in validStocks:
-        newText = "%s - %s \n" % (stockInfo[stock]['Name'], stock.upper())
+        newText = "\n%s - %s \n" % (stockInfo[stock]['Name'], stock.upper())
         # Ask / ^ price/percent
-        arrow = ('⬆️' if ('+' in stockInfo[stock]['Change']) else '⬇️' )
-        newText += "%.2f - %s%.2f/%.2f \n" % (float(stockInfo[stock]['Ask'])
-                                       , arrow
-                                       , float(stockInfo[stock]['Change'].translate(None, "+-"))
-                                       , float(stockInfo[stock]['Percent Change'].translate(None, "+-")))
+        arrow = ('+' if ('+' in stockInfo[stock]['Change']) else '-' )
+        newText += "$%.2f | %s%.2f/%.2f%% \n" % (float(stockInfo[stock]['Ask'])
+                                       , arrow \
+                                       , float(stockInfo[stock]['Change'].translate(None, "+-")) \
+                                       , float(stockInfo[stock]['Percent Change'].translate(None, "+%-")))
         newText += """\
-Open: %(Open)
-High: %(High)
-Low: %(Low)
-Previous Close: %(Previous Close)""" % stockInfo[stock]
+Open: %(Open)s
+High: %(High)s
+Low: %(Low)s
+Previous Close: %(Previous Close)s""" % stockInfo[stock]
 
         # Determine if we want this stock in the current message, or the message afterwards
-        if len(newText + returnLines[currentIndex]) >= MAX_TEXT_LENGTH:
+        if len(newText + returnLines[currentIndex]) >= maxLength:
             returnLines.append(newText)
             currentIndex += 1
         else:

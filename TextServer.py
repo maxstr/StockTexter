@@ -30,7 +30,7 @@ COMMANDS = \
     , 'plsstop' : fr.removeFromSchedule \
     , 'subscribedb' : fr.addToScheduleDB \
     , 'start' : (lambda _ : make_response(str(twilio.twiml.Response())))
-    , 'helppls' : fr.helpMessage}\
+    , 'plshelp' : fr.helpMessage}\
 
 
 

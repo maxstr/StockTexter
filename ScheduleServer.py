@@ -21,7 +21,8 @@ class ScheduleServer:
                 , topic = 'schedulerMessage'):
 
         self.scheduler = BackgroundScheduler()
-        self.scheduler.add_jobstore('sqlalchemy', url=(sqlite if sqlite else 'sqlite:///schedule.sqlite'))
+        if sqlite:
+		self.scheduler.add_jobstore('sqlalchemy', url=sqlite)
 
         self.redisHandle = redis.StrictRedis(**redisConfig)
         self.pub = self.redisHandle.pubsub()
@@ -53,6 +54,9 @@ class ScheduleServer:
                             self.messageHandles[messageContents['action']](**messageContents['args'])
                     except:
                         pass
-                sleep(1)
         except (KeyboardInterrupt, SystemExit):
             pass
+
+if __name__ == '__main__':
+    ScheduleServer = ScheduleServer()
+    ScheduleServer.run()
